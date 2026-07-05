@@ -8,6 +8,12 @@
 
 ---
 
+## ⚠️ تنبيه مهم قبل ما تبدأ
+
+اعتبارًا من **4 يونيو (جوان) 2026**، ديسكورد قيّدت الويدجتس بحيث **فقط مالك التطبيق (Application Owner)** هو المسموح له يضيف الويدجت لبروفايله الشخصي. يعني إذا تسوي هالدليل لخدمة أو تطبيق لأشخاص ثانين (مو نفسك)، الويدجت غالبًا ما راح يظهر لهم على بروفايلاتهم بسبب هالقيد الجديد. هذا الدليل يبقى مفيد لو تسوي ويدجت لنفسك فقط كمالك التطبيق.
+
+---
+
 ## الخطوة 1 — انشاء التطبيق
 
 1. اذهب الى discord.com/developers/applications
@@ -75,10 +81,39 @@ findByProps("getAll").getAll().find(e=>e.getName() === "ApexExperimentStore").cr
 
 ---
 
-## الخطوة 6 — ارسال البيانات الى Discord
+## الخطوة 6 — تفعيل هويتك (Application Identity) — **مطلوبة فقط اذا الويدجت لنفسك**
 
-افتح Termux او PowerShell وشغّل هذا الامر مع تعديل القيم:
+اذا تسوي الويدجت لنفسك فقط (مو خدمة لناس ثانين)، هذي الخطوة **إجبارية**، وإلا الويدجت يعلّق برسالة "Your game stats are still syncing. Keep playing!" ولا يظهر لأي احد.
 
+1. تأكد انك رخصت (Authorize) تطبيقك من الخطوة 5، وتأكد إنه ظاهر بصفحة Authorized Apps بإعدادات ديسكورد بنفس الصلاحيات المطلوبة (رسائل، صداقات، حالة النشاط، الخ)
+2. من صفحة Bot بالـ Developer Portal اضغط Reset Token واحفظ التوكن الجديد
+3. جهّز بيانات JSON مع إضافة حقل "username" بالجذر، مثال:
+
+```json
+{
+    "username": "any",
+    "data": {
+        "dynamic": [
+            {"type": 1, "name": "FIELD_NAME", "value": "FIELD_VALUE"}
+        ]
+    }
+}
+```
+
+4. شغّل هذا الأمر (استبدل القيم بمعلوماتك):
+
+**PowerShell (Windows):**
+```powershell
+$headers = @{
+    "Content-Type" = "application/json"
+    "Authorization" = "Bot BOT_TOKEN"
+    "User-Agent" = "DiscordBot (https://github.com/discord/discord-api-docs, 1.0.0)"
+}
+$body = '{"username":"any","data":{"dynamic":[{"type":1,"name":"FIELD_NAME","value":"FIELD_VALUE"}]}}'
+Invoke-RestMethod -Uri "https://discord.com/api/v9/applications/APPLICATION_ID/users/USER_ID/identities/0/profile" -Method PATCH -Headers $headers -Body $body
+```
+
+**Termux / Linux / macOS:**
 ```bash
 curl -X PATCH "https://discord.com/api/v9/applications/APPLICATION_ID/users/USER_ID/identities/0/profile" \
 -H "Content-Type: application/json" \
@@ -86,6 +121,16 @@ curl -X PATCH "https://discord.com/api/v9/applications/APPLICATION_ID/users/USER
 -H "User-Agent: DiscordBot (https://github.com/discord/discord-api-docs, 1.0.0)" \
 -d '{"username":"any","data":{"dynamic":[{"type":1,"name":"FIELD_NAME","value":"FIELD_VALUE"}]}}'
 ```
+
+⚠️ **مهم**: الأمر بصيغة `curl` مع `\` يشتغل فقط بـ Termux أو Bash/Linux/macOS. **لا يشتغل بـ PowerShell**. لو تستخدم PowerShell، استخدم أمر `Invoke-RestMethod` أعلاه بدلاً منه.
+
+لو نجح الأمر بدون أخطاء، انتقل مباشرة للخطوة 8. لو تسوي خدمة لأشخاص ثانين (مو نفسك بس)، تجاوز هالخطوة بالكامل.
+
+---
+
+## الخطوة 7 — ارسال بيانات الويدجت (لكل تحديث مستقبلي)
+
+نفس الأمر بالخطوة 6 (بدون حقل username بالجذر إذا كنت سويت الخطوة 6 مسبقًا)، تعيد تشغيله في كل مرة تبي تحدّث بيانات الويدجت بقيم جديدة.
 
 القيم المطلوبة:
 
@@ -96,9 +141,13 @@ curl -X PATCH "https://discord.com/api/v9/applications/APPLICATION_ID/users/USER
 
 ---
 
-## الخطوة 7 — اضافة الويدجت للبروفايل
+## الخطوة 8 — اضافة الويدجت للبروفايل
 
-افتح Discord في المتصفح ثم اضغط Ctrl+Shift+I واذهب لتبويب Console والصق هذا الكود:
+⚠️ ديسكورد غيّرت طريقة إضافة الويدجتس للبروفايل مؤخرًا وصارت أكثر تعقيدًا، والسكريبتات تتحدّث بشكل مستمر. يفضّل الانضمام لسيرفر Discord Previews ومتابعة القناة المخصصة للحصول على أحدث سكريبت شغّال، بدل الاعتماد على سكريبت ثابت قد يكون قديم.
+
+الطريقة العامة (قد تحتاج تحديث):
+
+افتح Discord في المتصفح ثم اضغط Ctrl+Shift+I واذهب لتبويب Console والصق كود مشابه لهذا (تأكد من الحصول على أحدث نسخة من مصدر موثوق):
 
 ```js
 let _mods=webpackChunkdiscord_app.push([[Symbol()],{},e=>e.c]);webpackChunkdiscord_app.pop();
@@ -109,16 +158,18 @@ findByProps("getFeaturedApplicationIds").getFeaturedApplicationIds().push("APPLI
 
 استبدل APPLICATION_ID بـ ID تطبيقك ثم اضغط Enter.
 
+تأكد أيضًا إن الإكسبيريمنت `2026-03-application-widget-v2-renderer` مضبوط على Variant 1، وإلا الويدجت قد لا يظهر حتى بعد إضافته بنجاح.
+
 بعدها افتح بروفايلك في Discord واضغط Add Widget واختر تطبيقك واضغط Save.
+
+**تذكير**: حتى لو نجحت كل الخطوات، بسبب القيد الجديد (أعلاه)، الويدجت راح يظهر **لك فقط كمالك التطبيق** وليس بالضرورة لأي زائر ثاني يفتح بروفايلك.
 
 ---
 
 ## ملاحظات مهمة
 
-الخطوات 3 و 5 و 7 تنفذ مرة واحدة فقط ولن تحتاجها مجددا.
-
-لتحديث بيانات الويدجت مستقبلا اعد تشغيل امر الخطوة 6 فقط مع البيانات الجديدة.
-
-لا تشارك Bot Token مع احد ابدا. اذا انكشف اضغط Reset Token فورا.
-
-لا تشارك Access Token الظاهر في رابط OAuth2 مع احد.
+- الخطوات 3 و 5 و 8 تنفذ مرة واحدة فقط ولن تحتاجها مجددا (باستثناء تحديثات ديسكورد المستمرة لخطوة 8)
+- لتحديث بيانات الويدجت مستقبلا اعد تشغيل امر الخطوة 7 فقط مع البيانات الجديدة
+- لا تشارك Bot Token مع احد ابدا. اذا انكشف اضغط Reset Token فورا
+- لا تشارك Access Token الظاهر في رابط OAuth2 مع احد
+- الويدجت حاليًا (بعد 4 يونيو 2026) يظهر فقط لمالك التطبيق نفسه، وليس بالضرورة للزوار الآخرين على البروفايل
