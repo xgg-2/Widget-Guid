@@ -104,13 +104,7 @@ findByProps("getAll").getAll().find(e=>e.getName() === "ApexExperimentStore").cr
 
 **PowerShell (Windows):**
 ```powershell
-$headers = @{
-    "Content-Type" = "application/json"
-    "Authorization" = "Bot BOT_TOKEN"
-    "User-Agent" = "DiscordBot (https://github.com/discord/discord-api-docs, 1.0.0)"
-}
-$body = '{"username":"any","data":{"dynamic":[{"type":1,"name":"FIELD_NAME","value":"FIELD_VALUE"}]}}'
-Invoke-RestMethod -Uri "https://discord.com/api/v9/applications/APPLICATION_ID/users/USER_ID/identities/0/profile" -Method PATCH -Headers $headers -Body $body
+Invoke-RestMethod -Uri "https://discord.com/api/v9/applications/APPLICATION_ID/users/USER_ID/identities/0/profile" -Method PATCH -Headers @{"Content-Type"="application/json"; "Authorization"="Bot BOT_TOKEN";"User-Agent"="DiscordBot (https://github.com/discord/discord-api-docs, 1.0.0)"} -Body '{"username":"any","data":{"dynamic":[{"type":1,"name":"FIELD_NAME","value":"FIELD_VALUE"}]}}'
 ```
 
 **Termux / Linux / macOS:**
@@ -122,7 +116,10 @@ curl -X PATCH "https://discord.com/api/v9/applications/APPLICATION_ID/users/USER
 -d '{"username":"any","data":{"dynamic":[{"type":1,"name":"FIELD_NAME","value":"FIELD_VALUE"}]}}'
 ```
 
-⚠️ **مهم**: الأمر بصيغة `curl` مع `\` يشتغل فقط بـ Termux أو Bash/Linux/macOS. **لا يشتغل بـ PowerShell**. لو تستخدم PowerShell، استخدم أمر `Invoke-RestMethod` أعلاه بدلاً منه.
+⚠️ **مهم**:
+- الأمر بصيغة `curl` مع `\` يشتغل فقط بـ Termux أو Bash/Linux/macOS. **لا يشتغل بـ PowerShell**. لو تستخدم PowerShell، استخدم أمر `Invoke-RestMethod` أعلاه بدلاً منه.
+- الرموز مثل `{discordApplicationId}` بالدليل الأصلي هي مجرد أماكن توضيحية — لازم تشيل الأقواس المعقوفة `{ }` بالكامل وتحط قيمتك الحقيقية مكانها (مثال: `users/1234567890` مب `users/{1234567890}`)
+- لف الرابط دايمًا بعلامتي تنصيص `" "` بـ PowerShell لتفادي مشاكل الفراغات
 
 لو نجح الأمر بدون أخطاء، انتقل مباشرة للخطوة 8. لو تسوي خدمة لأشخاص ثانين (مو نفسك بس)، تجاوز هالخطوة بالكامل.
 
@@ -173,3 +170,44 @@ findByProps("getFeaturedApplicationIds").getFeaturedApplicationIds().push("APPLI
 - لا تشارك Bot Token مع احد ابدا. اذا انكشف اضغط Reset Token فورا
 - لا تشارك Access Token الظاهر في رابط OAuth2 مع احد
 - الويدجت حاليًا (بعد 4 يونيو 2026) يظهر فقط لمالك التطبيق نفسه، وليس بالضرورة للزوار الآخرين على البروفايل
+
+---
+
+## 🛠️ استكشاف الأخطاء الشائعة (PowerShell)
+
+### الخطأ: `The term '-H' is not recognized...` أو أخطاء مشابهة عن `-d`, `-X`
+
+**السبب:** نسخت أمر curl بصيغة Linux/Bash (مع علامة `\` بآخر كل سطر) ولصقته مباشرة بـ PowerShell. الـ `curl` بـ PowerShell هو اسم مستعار (alias) لأمر `Invoke-WebRequest` الذي لا يفهم صيغة `-H`, `-X`, `-d`.
+
+**الحل:** استخدم أمر `Invoke-RestMethod` المخصص لـ PowerShell (الموجود بالخطوة 6)، وليس صيغة curl.
+
+---
+
+### الخطأ: `A positional parameter cannot be found that accepts argument '...'`
+
+**السبب الأول:** الرابط بعد `-Uri` غير محاط بعلامتي تنصيص `" "`. أي مسافة زائدة بالغلط تجعل PowerShell يقسّم الرابط لأجزاء منفصلة.
+
+**السبب الثاني (الأشيع):** نسيت حذف الأقواس المعقوفة `{ }` من حول القيم. الرموز بالدليل مثل `{discordApplicationId}` هي مجرد أماكن توضيحية (placeholders) — يجب حذف `{` و `}` بالكامل ووضع القيمة الحقيقية مكانها فقط.
+
+| ❌ خطأ | ✅ صحيح |
+|---|---|
+| `users/{1234567890}` | `users/1234567890` |
+
+**الحل:** لف الرابط كاملاً بعلامتي تنصيص مزدوجة `" "`، وتأكد ألا تبقى أي `{` أو `}` بالرابط أو بالتوكن.
+
+---
+
+### الخطأ: التوكن يظهر فارغًا `"Bot {}"` أو `"Bot "`
+
+**السبب:** نفس مشكلة الأقواس أعلاه، أو نسيت لصق التوكن الحقيقي مكان `BOT_TOKEN`.
+
+**الحل:** تأكد أن بعد كلمة `Bot ` مباشرة يأتي التوكن الحقيقي بدون أقواس وبدون مسافة زائدة.
+
+---
+
+### ✅ قائمة تحقق سريعة قبل تشغيل أي أمر
+
+1. لا توجد أي `{` أو `}` متبقية من القالب الأصلي
+2. الرابط محاط بعلامتي تنصيص `" "`
+3. الأمر بسطر واحد متواصل (أو أسطر PowerShell معرّفة صح بمتغيرات، وليس بعلامة `\`)
+4. تستخدم `Invoke-RestMethod` إذا كنت بـ PowerShell، أو `curl` إذا كنت بـ Termux/Linux/macOS — وليس العكس
