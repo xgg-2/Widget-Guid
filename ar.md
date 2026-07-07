@@ -69,7 +69,7 @@ findByProps("getAll").getAll().find(e=>e.getName() === "ApexExperimentStore").cr
  4. قم بتشغيل الأمر التالي بناءً على نظام التشغيل الخاص بك (تأكد من استبدال القيم المؤقتة بالقيم الفعلية الخاصة بك):
 **أداة PowerShell (على نظام ويندوز):**
 ```powershell
-Invoke-RestMethod -Uri "[https://discord.com/api/v9/applications/APPLICATION_ID/users/USER_ID/identities/0/profile](https://discord.com/api/v9/applications/APPLICATION_ID/users/USER_ID/identities/0/profile)" -Method PATCH -Headers @{"Content-Type"="application/json"; "Authorization"="Bot BOT_TOKEN";"User-Agent"="DiscordBot ([https://github.com/discord/discord-api-docs](https://github.com/discord/discord-api-docs), 1.0.0)"} -Body '{"username":"any","data":{"dynamic":[{"type":1,"name":"FIELD_NAME","value":"FIELD_VALUE"}]}}'
+Invoke-RestMethod -Uri "https://discord.com/api/v9/applications/APPLICATION_ID/users/USER_ID/identities/0/profile" -Method PATCH -Headers @{"Content-Type"="application/json"; "Authorization"="Bot BOT_TOKEN";"User-Agent"="DiscordBot (https://github.com/discord/discord-api-docs, 1.0.0)"} -Body '{"username":"any","data":{"dynamic":[{"type":1,"name":"FIELD_NAME","value":"FIELD_VALUE"}]}}'
 ```
 **تطبيق Termux / أنظمة Linux / macOS:**
 ```bash
