@@ -1,37 +1,56 @@
 # Discord Profile Widget — دليل الانشاء
 
-تاريخ الكتابة: يونيو 2026
+آخر تحديث: 5 يوليو 2026 (بناءً على النسخة v2 من دليل Chloe Cinders)
 
 هذا الدليل يشرح كيفية انشاء ويدجت مخصص في بروفايل Discord باستخدام Widgets v2.
 
-المتطلبات: حساب Discord، متصفح كروم او فايرفوكس، Termux او PowerShell.
+المتطلبات: حساب Discord، متصفح كروم او فايرفوكس، Windows/macOS (لتطبيق Widget Identity Creator).
+
+> [!NOTE]
+> ملاحظة: الويدجتس **ليست للبيانات اللحظية (Real-time)**. لازم تحدّثها ببوت يرسل تحديث كل فترة (دقائق)، مو كل ثانية.
 
 ---
 
 > [!WARNING]
-> اعتبارًا من **4 يونيو (جوان) 2026**، ديسكورد قيّدت الويدجتس بحيث **فقط مالك التطبيق (Application Owner)** هو المسموح له يضيف الويدجت لبروفايله الشخصي. يعني إذا تسوي هالدليل لخدمة أو تطبيق لأشخاص ثانين (مو نفسك)، الويدجت غالبًا ما راح يظهر لهم على بروفايلاتهم بسبب هالقيد الجديد. هذا الدليل يبقى مفيد لو تسوي ويدجت لنفسك فقط كمالك التطبيق.
+> **قيد المالك فقط:** ديسكورد قيّدت الويدجتس بحيث **فقط مالك التطبيق (Application Owner)** هو المسموح له يضيف الويدجت لبروفايله الشخصي. لا يمكنك حاليًا إضافة ويدجتس أشخاص آخرين. هذا الدليل لا يغطي صنع خدمة للآخرين — لو تبي تطّلع عليها، فيه بوت قديم مفتوح المصدر هنا: https://github.com/chloecinders/xivwidget وتوثيق الـ endpoints هنا: https://docs.discord.food/resources/widgets
+
+> [!IMPORTANT]
+> **تحذير أمان:** ظهرت خدمات تدّعي تسهيل صنع الويدجتس وتطلب منك تعطيها **توكن البوت الخاص فيك**. هذا يخالف شروط استخدام مطوري ديسكورد (TOS)، وسبب إيقاف خدمة كانت تسمى "Bot Ghost" وتعليق تطبيقات كثيرة. **لا تضع توكن بوتك بأي موقع خارجي أبدًا** — هذا خطير جدًا.
 
 ---
 
 ## الخطوة 1 — انشاء التطبيق
 
 1. اذهب الى discord.com/developers/applications
-2. اضغط New Application، اكتب اي اسم، اضغط Create
-3. احفظ Application ID من صفحة General Information
+2. اضغط New Application، اكتب اي اسم (هذا الاسم سيظهر على الويدجت)، اضغط Create
+3. اختر أيقونة للتطبيق (ستظهر أعلى يسار الويدجت جنب الاسم)
+4. احفظ Application ID من صفحة General Information
 
 ---
 
-## الخطوة 2 — تفعيل Social SDK
+## الخطوة 2 — اعداد OAuth2 Redirect
+
+1. من القائمة الجانبية اضغط OAuth2 تحت Overview
+2. اضغط Add Redirect واكتب: https://discord.com
+3. اضغط Save Changes بأسفل الصفحة
+
+---
+
+## الخطوة 3 — تفعيل Social SDK
 
 1. من القائمة الجانبية اضغط Games ثم Social SDK
-2. املأ النموذج واضغط Submit
-3. ستحصل على الوصول فورا
+2. املأ النموذج بمعلومات "الشركة" (المحتوى غير مهم، المهم تعبئة الحقول ذات النجمة *)
+3. فعّل مربع "I consent" واضغط Submit
+4. ستحصل على الوصول فورا
 
 ---
 
-## الخطوة 3 — فتح محرر الويدجت
+## الخطوة 4 — فتح محرر الويدجت
 
-افتح Developer Portal في المتصفح ثم اضغط F12 واذهب لتبويب Console والصق هذا الكود:
+> [!NOTE]
+> بدون هذه الخطوة، صفحة الويدجت لن تكون متاحة. لازم تكرر هذا الكود في كل مرة ترجع أو تحدّث الصفحة، ولازم يُنفّذ من صفحة Developer Portal الرئيسية.
+
+افتح Developer Portal في المتصفح ثم اضغط Ctrl+Shift+I (أو Cmd+Option+I بـ macOS) واذهب لتبويب Console والصق هذا الكود ثم اضغط Enter:
 
 ```js
 let _mods = webpackChunkdiscord_developers.push([[Symbol()],{},r=>r.c]);
@@ -52,138 +71,161 @@ let findByProps = (...props) => {
 findByProps("getAll").getAll().find(e=>e.getName() === "ApexExperimentStore").createOverride("2026-03-widget-config-editor", 1)
 ```
 
-بعد تشغيل الكود لا تضغط F5 ابدا. اضغط السهم للخلف فقط ثم افتح تطبيقك مجددا. ستجد Widget تحت Games في القائمة الجانبية.
+لو رد الكونسول بكلمة "undefined"، الكود اشتغل بنجاح. لا تضغط F5 بعدها. اضغط السهم للخلف فقط ثم افتح تطبيقك مجددا. ستجد Widget تحت Games في القائمة الجانبية.
 
 ---
 
-## الخطوة 4 — تصميم الويدجت
+## الخطوة 5 — تصميم الويدجت
 
-1. اضغط Create Widget
-2. صمم الويدجت واضف الحقول التي تريدها
-3. اضغط Sample Data في الاسفل واضف بيانات تجريبية لكل حقل
-4. اضغط Generate JSON واحفظ الناتج
-5. اضغط Save Changes ثم Publish
+اضغط على "Widget" بالقائمة الجانبية ثم Create Widget. ستدخل محرر إعدادات الويدجت.
 
----
+### الأسطح (Surfaces)
 
-## الخطوة 5 — اعداد OAuth2
+المحرر فيه قائمة منسدلة لاختيار "السطح" اللي تبي تصممه:
 
-1. من القائمة الجانبية اضغط OAuth2
-2. في قسم Redirects اضغط Add Redirect واكتب: https://discord.com
-3. اضغط Save
-4. انزل الى URL Generator
-5. اختر هذين الـ Scopes فقط: openid و sdk.social_layer
-6. اختر Redirect: https://discord.com
-7. انسخ الـ URL الناتج
-8. في الـ URL غير response_type=code الى response_type=token
-9. افتح الرابط في المتصفح واقبل الصلاحيات
+- **Widget Top**: الجزء العلوي (عناوين وصورة)
+- **Widget Bottom**: الجزء السفلي (حقول لعرض إحصائيات، فيها تصاميم متعددة: 6 stats بشبكة، progress bar وحدة مع صورة، أو 4 stats بشبكة مع صور)
+- **Add Widget Preview**: شكل الويدجت داخل نافذة "Add Widget" بتطبيق ديسكورد
+- **Mini Profile**: قسم صغير يظهر بالبروفايل المصغّر (عند الضغط على مستخدم قبل فتح البروفايل الكامل)
+- **Activity Accessory**: نص صغير مرفق بأنشطة Rich Presence لنفس التطبيق
 
----
+### الحقول (Fields)
 
-## الخطوة 6 — تفعيل هويتك (Application Identity)
+بعد اختيار تصميم لكل سطح، يظهر تبويب "Content" جنب "Design". الحقول المعلّم عليها **"Required"** إجبارية، والباقي اختياري.
 
-> [!NOTE]
-> مطلوبة فقط اذا الويدجت لنفسك.
+كل حقل له:
+- **Presentation Type** (للحقول النصية فقط): Text, Number, أو Duration
+  - خله **Text** دايمًا لو الويدجت ثابت وما يتحدّث
+  - لو عندك بوت يحدّث البيانات، اختر النوع المناسب (Duration ياخذ رقم بالميلي ثانية، مثلاً 123456 يعرض "2m 3s 456ms")
+- **Value Type** (يُعرف أيضًا Data Field): naming النوع
+  - **User Data**: البيانات تجي من API لكل مستخدم — هذا يخليك تحدّث الويدجت ديناميكيًا بدون تعديل الإعدادات
+  - **Custom String** (أو **Application Asset** للصور): قيمة ثابتة لا تتغير أبدًا — الخيار الموصى به لو تبي ويدجت ثابت
+- **Value** (أو Content): المفتاح (key) لو Value Type = User Data، أو النص الفعلي لو Custom String
 
-اذا تسوي الويدجت لنفسك فقط (مو خدمة لناس ثانين)، هذي الخطوة **إجبارية**، وإلا الويدجت يعلّق برسالة "Your game stats are still syncing. Keep playing!" ولا يظهر لأي احد.
+**لإضافة صورة (Application Asset):** اضغط زر الصورة جنب الحقل، اضغط "Add Asset" أعلى يمين النافذة، ارفع صورة (تقدر تكون متحركة GIF)، ثم اضغط "Make Public" بعد اختيارها.
 
-1. تأكد انك رخصت (Authorize) تطبيقك من الخطوة 5، وتأكد إنه ظاهر بصفحة Authorized Apps بإعدادات ديسكورد بنفس الصلاحيات المطلوبة (رسائل، صداقات، حالة النشاط، الخ)
-2. من صفحة Bot بالـ Developer Portal اضغط Reset Token واحفظ التوكن الجديد
-3. جهّز بيانات JSON مع إضافة حقل "username" بالجذر، مثال:
+**Fallback:** لو تستخدم User Data، تقدر تحدد قيمة احتياطية (Fallback) تظهر لو البيانات لسا ما وصلت — هذي دايمًا Custom String.
 
-```json
-{
-    "username": "any",
-    "data": {
-        "dynamic": [
-            {"type": 1, "name": "FIELD_NAME", "value": "FIELD_VALUE"}
-        ]
-    }
-}
-```
+**Widget Bottom بتصميم Progress:** يتطلب User Data إجباريًا. "Current Value" رقم من 0.0 إلى 1.0 (0% إلى 100%). لو فعّلت "Max Value" برقم معين، يعرض كمية بدل نسبة، ولازم Current Value يكون رقم صحيح.
 
-4. شغّل هذا الأمر (استبدل القيم بمعلوماتك):
+### التحقق والنشر
 
-**PowerShell (Windows):**
-```powershell
-Invoke-RestMethod -Uri "https://discord.com/api/v9/applications/APPLICATION_ID/users/USER_ID/identities/0/profile" -Method PATCH -Headers @{"Content-Type"="application/json"; "Authorization"="Bot BOT_TOKEN";"User-Agent"="DiscordBot (https://github.com/discord/discord-api-docs, 1.0.0)"} -Body '{"username":"any","data":{"dynamic":[{"type":1,"name":"FIELD_NAME","value":"FIELD_VALUE"}]}}'
-```
+بأسفل الشاشة فيه تبويب **Validation** يعرض كل مشاكل إعداد الويدجت الحالي — صمم واحل كل المشاكل قبل ما تكمل.
 
-**Termux / Linux / macOS:**
-```bash
-curl -X PATCH "https://discord.com/api/v9/applications/APPLICATION_ID/users/USER_ID/identities/0/profile" \
--H "Content-Type: application/json" \
--H "Authorization: Bot BOT_TOKEN" \
--H "User-Agent: DiscordBot (https://github.com/discord/discord-api-docs, 1.0.0)" \
--d '{"username":"any","data":{"dynamic":[{"type":1,"name":"FIELD_NAME","value":"FIELD_VALUE"}]}}'
-```
+لو عندك أي حقول User Data، استخدم تبويب **Sample Data** بالأسفل مع أيقونة القلم جنب كل حقل لتعبئة بيانات تجريبية ومعاينة الشكل النهائي.
 
-> [!IMPORTANT]
-> - الأمر بصيغة `curl` مع `\` يشتغل فقط بـ Termux أو Bash/Linux/macOS. **لا يشتغل بـ PowerShell**. لو تستخدم PowerShell، استخدم أمر `Invoke-RestMethod` أعلاه بدلاً منه.
-> - الرموز مثل `{discordApplicationId}` بالدليل الأصلي هي مجرد أماكن توضيحية — لازم تشيل الأقواس المعقوفة `{ }` بالكامل وتحط قيمتك الحقيقية مكانها (مثال: `users/1234567890` مب `users/{1234567890}`)
-> - لف الرابط دايمًا بعلامتي تنصيص `" "` بـ PowerShell لتفادي مشاكل الفراغات
+بعد التأكد من الشكل، اضغط **Generate JSON** أعلى يمين تبويب Sample Data، اضغط **Copy**، واحفظ الناتج بملاحظاتك (Notepad أو Notes).
 
-لو نجح الأمر بدون أخطاء، انتقل مباشرة للخطوة 8. لو تسوي خدمة لأشخاص ثانين (مو نفسك بس)، تجاوز هالخطوة بالكامل.
+أخيرًا اضغط **Save Changes** ثم **Publish** (لا تنسَ الضغط على Publish!).
 
 ---
 
-## الخطوة 7 — ارسال بيانات الويدجت (لكل تحديث مستقبلي)
-
-نفس الأمر بالخطوة 6 (بدون حقل username بالجذر إذا كنت سويت الخطوة 6 مسبقًا)، تعيد تشغيله في كل مرة تبي تحدّث بيانات الويدجت بقيم جديدة.
-
-القيم المطلوبة:
-
-- APPLICATION_ID: ID تطبيقك من Developer Portal
-- USER_ID: ID حسابك في Discord (Settings > Advanced > فعّل Developer Mode ثم كليك يمين على اسمك)
-- BOT_TOKEN: من صفحة Bot في Developer Portal اضغط Reset Token
-- FIELD_NAME و FIELD_VALUE: اسم وقيمة كل حقل في الويدجت
-
----
-
-## الخطوة 8 — اضافة الويدجت للبروفايل
+## الخطوة 6 — تفعيل هوية التطبيق (Application Identity)
 
 > [!WARNING]
-> ديسكورد غيّرت طريقة إضافة الويدجتس للبروفايل مؤخرًا وصارت أكثر تعقيدًا، والسكريبتات تتحدّث بشكل مستمر. يفضّل الانضمام لسيرفر Discord Previews ومتابعة القناة المخصصة للحصول على أحدث سكريبت شغّال، بدل الاعتماد على سكريبت ثابت قد يكون قديم.
+> تخطي هذه الخطوة يسبب عدم ظهور الويدجت لأي مستخدم آخر!
 
-الطريقة العامة (قد تحتاج تحديث):
+هذه الخطوة كانت تُنفّذ سابقًا عبر Terminal (PowerShell/curl)، لكنها كانت عرضة للأخطاء. الطريقة الموصى بها الآن هي تطبيق مكتبي صغير:
 
-افتح Discord في المتصفح ثم اضغط Ctrl+Shift+I واذهب لتبويب Console والصق كود مشابه لهذا (تأكد من الحصول على أحدث نسخة من مصدر موثوق):
+### الطريقة الموصى بها: Widget Identity Creator
+
+حمّل التطبيق من: https://github.com/chloecinders/widget-identity-creator/releases
+
+**على Windows:** عند فتح التطبيق لأول مرة، سيظهر تحذير "Windows protected your PC" — هذا ليس تحذير فيروسات، بل لأن مطوري التطبيقات يحتاجون دفع رسوم ترخيص لإخفاء هذا التحذير. اضغط "More info" ثم "Run anyway".
+
+**على macOS:** سيظهر تحذير "This app is damaged" أو مشابه. لحل هذا، افتح Spotlight (Cmd+Space)، افتح Terminal، وشغّل:
+```bash
+xattr -cr /Applications/"Widget Identity Creator.app"
+```
+
+**خطوات الاستخدام:**
+
+1. احصل على توكن البوت: ارجع لصفحة تطبيقك بالمتصفح، اذهب لـ Bot تحت Overview، اضغط Reset Token
+
+> [!IMPORTANT]
+> لا تشارك هذا التوكن مع أي أحد أو أي موقع آخر — من يحصل عليه يتحكم بالكامل ببوتك. الـ Widget Identity Creator هو تطبيق سطح مكتب (وليس موقع) خصيصًا حتى لا يغادر التوكن جهازك أبدًا، وكوده مفتوح المصدر ويمكن مراجعته.
+
+2. انسخ التوكن والصقه بالتطبيق، اضغط Confirm
+3. تأكد أن اسم التطبيق و**الـ User ID** صحيحين (يجب أن يكون user ID الخاص بك أنت)
+4. لو ما أكملت خطوة Social SDK، سيظهر لك تحذير موجّه للصفحة الصحيحة
+5. اضغط Confirm مرة أخرى — سيعرض التطبيق إعدادات الويدجت بالعمود الأيسر والعمود الأيمن لتعديل أي User Data
+6. لو ما عندك بيانات مخصصة، سيملأ التطبيق تلقائيًا حقل "Raw Sample Data JSON" ويظهر "Sample data matches widget config requirements!"
+7. لو عندك بيانات (JSON اللي حفظته بالخطوة السابقة)، الصقه بنفس الحقل. قد تظهر أخطاء تحقق (مثلاً: صور من User Data لا تُرفع تلقائيًا لسيرفرات ديسكورد — يجب استضافتها بنفسك والحصول على روابط علنية، ثم إدخالها بـ"Manual Dynamic Fields Editor")
+8. بعد حل كل الأخطاء وظهور "Sample data matches widget config requirements!"، اضغط **Apply**
+9. سيطلب منك تفويض (Authorize) تطبيقك على حسابك — اضغط "Open Authorization URL in Browser" ووافق
+10. ارجع للتطبيق واضغط "Apply to Application Identity" مرة أخرى. النجاح يظهر كـ "Application identity updated successfully"
+11. لو ظهر أن الويدجت لسا بحالة "draft"، اضغط زر **Publish** داخل التطبيق
+
+### طريقة بديلة (بدون تحميل تطبيق)
+
+لو ما تبي تحمّل تطبيق، فيه دليل بديل من Amia هنا: https://gist.github.com/aamiaa/7cdd590e3949cd654758bc90bcb4710b
+
+---
+
+## الخطوة 7 — اضافة الويدجت للبروفايل
+
+> [!WARNING]
+> عدم اتباع أي خطوة سابقة بدقة، أو حدوث أخطاء فيها، سيسبب إما عدم ظهور الويدجت هنا أو عدم ظهوره لبقية المستخدمين.
+
+افتح ديسكورد بالمتصفح: https://discord.com/app. افتح أدوات المطور مرة أخرى (Ctrl+Shift+I أو Cmd+Option+I) واذهب لتبويب Console.
+
+> [!NOTE]
+> ستظهر لك رسائل تحذيرية من ديسكورد بخصوص لصق أكواد بالكونسول (خطر احتيال حقيقي بشكل عام) — لكننا هنا فقط لإضافة الويدجت لبروفايلنا، وليس لسرقة أي معلومات دخول.
+
+ديسكورد قيّدت قائمة "Add Widget" على تطبيقات "مميزة" محددة فقط، لذلك سنتجاوز هذا بإرسال طلب مباشر لإضافة الويدجت للبروفايل. انسخ هذا الكود والصقه بالكونسول، **لكن لا تضغط Enter بعد**:
 
 ```js
 let _mods=webpackChunkdiscord_app.push([[Symbol()],{},e=>e.c]);webpackChunkdiscord_app.pop();
 let findByProps=(...e)=>{for(let t of Object.values(_mods))try{if(!t.exports||t.exports===window)continue;if(e.every(e=>t.exports?.[e]))return t.exports;for(let r in t.exports)if(e.every(e=>t.exports?.[r]?.[e])&&"IntlMessagesProxy"!==t.exports[r][Symbol.toStringTag])return t.exports[r]}catch{}};
 
-findByProps("getFeaturedApplicationIds").getFeaturedApplicationIds().push("APPLICATION_ID");
+api = findByProps("Bo", "Cu").Bo
+async function addWidget(appId) {
+    id = findByProps("getCurrentUser").getCurrentUser().id;
+    current_widgets = (await api.get("/users/" + id + "/profile")).body.widgets
+    if (current_widgets.map(x=>x.data?.application_id).includes(appId)) {return console.log("Already in your widgets — remove it via Discord client to re-add")}
+    current_widgets.unshift({"data": {"type": "application","application_id": appId}})
+    await api.put({url: "/users/@me/widgets",body:{widgets: current_widgets}})
+}
+// Usage
+addWidget("APPLICATION_ID")
 ```
 
-استبدل APPLICATION_ID بـ ID تطبيقك ثم اضغط Enter.
+> [!IMPORTANT]
+> هذا الكود يختلف عن الإصدار السابق (`getFeaturedApplicationIds`) الذي لم يعد يعمل بشكل موثوق. تأكد من استخدام هذا الإصدار المحدّث.
 
-تأكد أيضًا إن الإكسبيريمنت `2026-03-application-widget-v2-renderer` مضبوط على Variant 1، وإلا الويدجت قد لا يظهر حتى بعد إضافته بنجاح.
+استبدل `"APPLICATION_ID"` بمعرّف تطبيقك الحقيقي (يوجد بصفحة General Information بالـ Developer Portal). بعدها اضغط Enter.
 
-بعدها افتح بروفايلك في Discord واضغط Add Widget واختر تطبيقك واضغط Save.
+لو لم تظهر أخطاء حمراء كبيرة تخص `PUT https://discord.com/api/v9/users/@me/widgets`، فقد نجحت العملية! أعد تحميل تطبيق ديسكورد (Ctrl+R) وتحقق من بروفايلك.
+
+تأكد أيضًا إن الإكسبيريمنت `2026-03-application-widget-v2-renderer` مضبوط على Variant 1 بحسابك، وإلا الويدجت قد لا يظهر حتى بعد إضافته بنجاح.
 
 > [!NOTE]
-> حتى لو نجحت كل الخطوات، بسبب القيد الجديد (أعلاه)، الويدجت راح يظهر **لك فقط كمالك التطبيق** وليس بالضرورة لأي زائر ثاني يفتح بروفايلك.
+> حتى مع نجاح كل الخطوات، بسبب قيد "مالك التطبيق فقط" (بالأعلى)، الويدجت سيظهر **لك فقط** وليس بالضرورة لأي زائر آخر يفتح بروفايلك.
 
 ---
 
 ## ملاحظات مهمة
 
-- الخطوات 3 و 5 و 8 تنفذ مرة واحدة فقط ولن تحتاجها مجددا (باستثناء تحديثات ديسكورد المستمرة لخطوة 8)
-- لتحديث بيانات الويدجت مستقبلا اعد تشغيل امر الخطوة 7 فقط مع البيانات الجديدة
-- لا تشارك Bot Token مع احد ابدا. اذا انكشف اضغط Reset Token فورا
-- لا تشارك Access Token الظاهر في رابط OAuth2 مع احد
-- الويدجت حاليًا (بعد 4 يونيو 2026) يظهر فقط لمالك التطبيق نفسه، وليس بالضرورة للزوار الآخرين على البروفايل
+- الخطوات 4 و 7 (وتفعيل الإكسبيريمنت) قد تحتاج إعادة تنفيذ عند تحديث الصفحة أو زيارتها من جديد
+- لتحديث بيانات الويدجت مستقبلاً، أرسل بيانات جديدة عبر البوت الخاص بك بنفس الطريقة المستخدمة بخطوة تفعيل الهوية (عبر API مباشرة، وليس بالضرورة نفس التطبيق المكتبي في كل مرة إذا كان لديك بوت مستقل)
+- لا تشارك Bot Token مع أي أحد أو أي موقع خارجي أبدًا. إذا انكشف، اضغط Reset Token فورًا
+- لا تشارك أي Access/Authorization Token مع أحد
+- الويدجت حاليًا يظهر فقط لمالك التطبيق نفسه، وليس بالضرورة للزوار الآخرين على البروفايل
+- الويدجتس ليست مخصصة للبيانات اللحظية (Real-time) — استخدم فترات تحديث معقولة (دقائق، وليس ثوانٍ)
+- للمساعدة أو الإبلاغ عن مشاكل، انضم لسيرفر Discord Previews واقرأ قناة #widget-faq أولاً قبل السؤال بـ #widget-chat، وتصفح #widget-showcase للإلهام
 
 ---
 
-## استكشاف الأخطاء الشائعة (PowerShell)
+## استكشاف الأخطاء الشائعة (PowerShell / الطريقة اليدوية القديمة)
+
+> [!NOTE]
+> هذا القسم يخص من يزال يستخدم الطريقة اليدوية (PowerShell/curl) بدلاً من تطبيق Widget Identity Creator الموصى به حاليًا.
 
 ### الخطأ: `The term '-H' is not recognized...` أو أخطاء مشابهة عن `-d`, `-X`
 
 **السبب:** نسخت أمر curl بصيغة Linux/Bash (مع علامة `\` بآخر كل سطر) ولصقته مباشرة بـ PowerShell. الـ `curl` بـ PowerShell هو اسم مستعار (alias) لأمر `Invoke-WebRequest` الذي لا يفهم صيغة `-H`, `-X`, `-d`.
 
-**الحل:** استخدم أمر `Invoke-RestMethod` المخصص لـ PowerShell (الموجود بالخطوة 6)، وليس صيغة curl.
+**الحل:** استخدم أمر `Invoke-RestMethod` المخصص لـ PowerShell، أو الأفضل استخدم تطبيق Widget Identity Creator بدلاً من ذلك.
 
 ---
 
@@ -191,7 +233,7 @@ findByProps("getFeaturedApplicationIds").getFeaturedApplicationIds().push("APPLI
 
 **السبب الأول:** الرابط بعد `-Uri` غير محاط بعلامتي تنصيص `" "`. أي مسافة زائدة بالغلط تجعل PowerShell يقسّم الرابط لأجزاء منفصلة.
 
-**السبب الثاني (الأشيع):** نسيت حذف الأقواس المعقوفة `{ }` من حول القيم. الرموز بالدليل مثل `{discordApplicationId}` هي مجرد أماكن توضيحية (placeholders) — يجب حذف `{` و `}` بالكامل ووضع القيمة الحقيقية مكانها فقط.
+**السبب الثاني (الأشيع):** نسيت حذف الأقواس المعقوفة `{ }` من حول القيم. الرموز مثل `{discordApplicationId}` هي مجرد أماكن توضيحية (placeholders) — يجب حذف `{` و `}` بالكامل ووضع القيمة الحقيقية مكانها فقط.
 
 | الحالة | خطأ | صحيح |
 |---|---|---|
@@ -209,9 +251,18 @@ findByProps("getFeaturedApplicationIds").getFeaturedApplicationIds().push("APPLI
 
 ---
 
-### قائمة تحقق سريعة قبل تشغيل أي أمر
+### الويدجت لا يظهر رغم نجاح كل الخطوات
+
+**الأسباب المحتملة:**
+- الإكسبيريمنت `2026-03-application-widget-v2-renderer` غير مضبوط على Variant 1
+- لم يُنشر (Publish) البوت لأي تحديث بيانات فعلي بعد خطوة تفعيل الهوية
+- الكود المستخدم بالخطوة 7 قديم (نسخة `getFeaturedApplicationIds` بدلاً من `addWidget`)
+- أنت لست مالك التطبيق (Application Owner) — القيد الجديد يمنع الويدجتس من الظهور لغير المالك
+
+### قائمة تحقق سريعة قبل تشغيل أي أمر يدوي
 
 - [ ] لا توجد أي `{` أو `}` متبقية من القالب الأصلي
 - [ ] الرابط محاط بعلامتي تنصيص `" "`
 - [ ] الأمر بسطر واحد متواصل (أو أسطر PowerShell معرّفة صح بمتغيرات، وليس بعلامة `\`)
-- [ ] تستخدم `Invoke-RestMethod` إذا كنت بـ PowerShell، أو `curl` إذا كنت بـ Termux/Linux/macOS — وليس العكس
+- [ ] تستخدم الكود المحدّث لإضافة الويدجت للبروفايل (`addWidget`)، وليس النسخة القديمة (`getFeaturedApplicationIds`)
+- [ ] الإكسبيريمنت `2026-03-application-widget-v2-renderer` مفعّل على Variant 1
