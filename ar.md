@@ -101,7 +101,18 @@ curl -X PATCH "[https://discord.com/api/v9/applications/APPLICATION_ID/users/USE
 ```js
 let _mods=webpackChunkdiscord_app.push([[Symbol()],{},e=>e.c]);webpackChunkdiscord_app.pop();
 let findByProps=(...e)=>{for(let t of Object.values(_mods))try{if(!t.exports||t.exports===window)continue;if(e.every(e=>t.exports?.[e]))return t.exports;for(let r in t.exports)if(e.every(e=>t.exports?.[r]?.[e])&&"IntlMessagesProxy"!==t.exports[r][Symbol.toStringTag])return t.exports[r]}catch{}};
-findByProps("getFeaturedApplicationIds").getFeaturedApplicationIds().push("APPLICATION_ID");
+
+api = findByProps("Bo", "Cu").Bo
+async function addWidget(appId) {
+    id = findByProps("getCurrentUser").getCurrentUser().id;
+    current_widgets = (await api.get("/users/" + id + "/profile")).body.widgets
+    if (current_widgets.map(x=>x.data?.application_id).includes(appId)) {return console.log("Already in your widgets — remove it via Discord client to re-add")}
+    current_widgets.unshift({"data": {"type": "application","application_id": appId}})
+    await api.put({url: "/users/@me/widgets",body:{widgets: current_widgets}})
+}
+// Usage
+addWidget("APPLICATION_ID")
+
 ```
 استبدل النص APPLICATION_ID بمعرف تطبيقك الفعلي، ثم اضغط على زر Enter لتشغيل الكود.
 تأكد أيضًا من تفعيل التجربة (Experiment) المسماة 2026-03-application-widget-v2-renderer وضبطها على الخيار **Variant 1**، وإلا فقد لا يظهر الودجت نهائيًا حتى وإن تمت إضافته بنجاح.
