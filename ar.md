@@ -131,7 +131,7 @@ findByProps("getAll").getAll().find(e=>e.getName() === "ApexExperimentStore").cr
 
 موقع بسيط يسوي هذي الخطوة بدون تحميل أي شي وبدون فتح Terminal — يشتغل من أي متصفح، حتى من الموبايل:
 
-**widget-tool.pages.dev**
+https://widget-tool.pages.dev
 
 **خطوات الاستخدام:**
 1. افتح الرابط
