@@ -131,7 +131,7 @@ findByProps("getAll").getAll().find(e=>e.getName() === "ApexExperimentStore").cr
 
 موقع بسيط يسوي هذي الخطوة بدون تحميل أي شي وبدون فتح Terminal — يشتغل من أي متصفح، حتى من الموبايل:
 
-https://widget-tool.pages.dev
+**widget-tool.pages.dev**
 
 **خطوات الاستخدام:**
 1. افتح الرابط
@@ -143,38 +143,85 @@ https://widget-tool.pages.dev
 > [!NOTE]
 > هذا خيار مجتمعي إضافي، مو أداة رسمية من ديسكورد أو من كاتب الدليل الأصلي. راجع كود المصدر بنفسك قبل إدخال توكن بوتك بأي أداة خارجية، مهما كانت.
 
-### الطريقة الموصى بها من الدليل الأصلي: Widget Identity Creator
+### الطريقة اليدوية: عبر Terminal (PowerShell / Termux / Linux / macOS)
 
-حمّل التطبيق من: https://github.com/chloecinders/widget-identity-creator/releases
+جهّز بيانات الـ JSON الخاصة بك مع إضافة حقل "username" في الجذر الرئيسي، على سبيل المثال:
 
-**على Windows:** عند فتح التطبيق لأول مرة، سيظهر تحذير "Windows protected your PC" — هذا ليس تحذير فيروسات، بل لأن مطوري التطبيقات يحتاجون دفع رسوم ترخيص لإخفاء هذا التحذير. اضغط "More info" ثم "Run anyway".
-
-**على macOS:** سيظهر تحذير "This app is damaged" أو مشابه. لحل هذا، افتح Spotlight (Cmd+Space)، افتح Terminal، وشغّل:
-```bash
-xattr -cr /Applications/"Widget Identity Creator.app"
+```json
+{
+    "username": "any",
+    "data": {
+        "dynamic": [
+            {"type": 1, "name": "FIELD_NAME", "value": "FIELD_VALUE"}
+        ]
+    }
+}
 ```
 
-**خطوات الاستخدام:**
+شغّل الأمر التالي بناءً على نظام التشغيل الخاص بك (استبدل القيم المؤقتة بالقيم الفعلية):
 
-1. احصل على توكن البوت: ارجع لصفحة تطبيقك بالمتصفح، اذهب لـ Bot تحت Overview، اضغط Reset Token
+**PowerShell (Windows):**
+```powershell
+Invoke-RestMethod -Uri "https://discord.com/api/v9/applications/APPLICATION_ID/users/USER_ID/identities/0/profile" -Method PATCH -Headers @{"Content-Type"="application/json"; "Authorization"="Bot BOT_TOKEN";"User-Agent"="DiscordBot (https://github.com/discord/discord-api-docs, 1.0.0)"} -Body '{"username":"any","data":{"dynamic":[{"type":1,"name":"FIELD_NAME","value":"FIELD_VALUE"}]}}'
+```
+
+**Termux / Linux / macOS:**
+```bash
+curl -X PATCH "https://discord.com/api/v9/applications/APPLICATION_ID/users/USER_ID/identities/0/profile" \
+-H "Content-Type: application/json" \
+-H "Authorization: Bot BOT_TOKEN" \
+-H "User-Agent: DiscordBot (https://github.com/discord/discord-api-docs, 1.0.0)" \
+-d '{"username":"any","data":{"dynamic":[{"type":1,"name":"FIELD_NAME","value":"FIELD_VALUE"}]}}'
+```
 
 > [!IMPORTANT]
-> لا تشارك هذا التوكن مع أي أحد أو أي موقع آخر — من يحصل عليه يتحكم بالكامل ببوتك. الـ Widget Identity Creator هو تطبيق سطح مكتب (وليس موقع) خصيصًا حتى لا يغادر التوكن جهازك أبدًا، وكوده مفتوح المصدر ويمكن مراجعته.
+> - أمر curl الذي يستخدم علامة `\` لتقسيم السطور يعمل فقط على Termux و Bash و Linux و macOS. **لا يعمل إطلاقًا في PowerShell**. إذا كنت تستخدم PowerShell، استخدم أمر `Invoke-RestMethod` أعلاه بدلاً منه.
+> - الرموز مثل `{discordApplicationId}` الواردة في مراجع أخرى هي مجرد نصوص بديلة توضيحية — يجب إزالة الأقواس المعقوفة `{ }` بالكامل ووضع القيمة الحقيقية مكانها (مثال: `users/1234567890` بدلاً من `users/{1234567890}`).
+> - أحِط الرابط دائمًا بعلامات اقتباس مزدوجة `" "` في PowerShell لتفادي مشاكل المسافات الفارغة.
 
-2. انسخ التوكن والصقه بالتطبيق، اضغط Confirm
-3. تأكد أن اسم التطبيق و**الـ User ID** صحيحين (يجب أن يكون user ID الخاص بك أنت)
-4. لو ما أكملت خطوة Social SDK، سيظهر لك تحذير موجّه للصفحة الصحيحة
-5. اضغط Confirm مرة أخرى — سيعرض التطبيق إعدادات الويدجت بالعمود الأيسر والعمود الأيمن لتعديل أي User Data
-6. لو ما عندك بيانات مخصصة، سيملأ التطبيق تلقائيًا حقل "Raw Sample Data JSON" ويظهر "Sample data matches widget config requirements!"
-7. لو عندك بيانات (JSON اللي حفظته بالخطوة السابقة)، الصقه بنفس الحقل. قد تظهر أخطاء تحقق (مثلاً: صور من User Data لا تُرفع تلقائيًا لسيرفرات ديسكورد — يجب استضافتها بنفسك والحصول على روابط علنية، ثم إدخالها بـ"Manual Dynamic Fields Editor")
-8. بعد حل كل الأخطاء وظهور "Sample data matches widget config requirements!"، اضغط **Apply**
-9. سيطلب منك تفويض (Authorize) تطبيقك على حسابك — اضغط "Open Authorization URL in Browser" ووافق
-10. ارجع للتطبيق واضغط "Apply to Application Identity" مرة أخرى. النجاح يظهر كـ "Application identity updated successfully"
-11. لو ظهر أن الويدجت لسا بحالة "draft"، اضغط زر **Publish** داخل التطبيق
+القيم المطلوبة للاستبدال:
+- **APPLICATION_ID**: معرف تطبيقك من بوابة المطورين
+- **USER_ID**: معرف حسابك في ديسكورد (Settings > Advanced > فعّل Developer Mode، ثم كليك يمين على اسمك)
+- **BOT_TOKEN**: التوكن من صفحة Bot في بوابة المطورين بعد الضغط على Reset Token
+- **FIELD_NAME** و **FIELD_VALUE**: اسم وقيمة كل حقل مخصص صممته بالودجت
 
-### طريقة ثالثة (بدون تحميل تطبيق، عبر Terminal يدويًا)
+لو نجح الأمر بدون أخطاء، انتقل مباشرة للخطوة 8. لو تبني خدمة لأشخاص آخرين (مو لنفسك بس)، تخطّ هذي الخطوة بالكامل.
 
-لو ما تبي تحمّل تطبيق، فيه دليل بديل من Amia هنا: https://gist.github.com/aamiaa/7cdd590e3949cd654758bc90bcb4710b
+#### حل المشكلات الشائعة (PowerShell)
+
+**خطأ: `The term '-H' is not recognized...` أو أخطاء مشابهة عن `-d`, `-X`**
+
+السبب: نسخت أمر curl بصيغة Linux/Bash (مع علامة `\` بآخر كل سطر) ولصقته مباشرة بـ PowerShell. الـ `curl` بـ PowerShell اسم مستعار لأمر `Invoke-WebRequest` الذي لا يفهم صيغة `-H`, `-X`, `-d`.
+
+الحل: استخدم أمر `Invoke-RestMethod` أعلاه، وليس صيغة curl.
+
+**خطأ: `A positional parameter cannot be found that accepts argument '...'`**
+
+السبب الأول: الرابط بعد `-Uri` غير محاط بعلامتي تنصيص `" "`. أي مسافة زائدة تجعل PowerShell يقسّم الرابط لأجزاء منفصلة.
+
+السبب الثاني (الأشيع): نسيت حذف الأقواس المعقوفة `{ }` من حول القيم.
+
+| الحالة | خطأ | صحيح |
+|---|---|---|
+| مثال | `users/{1234567890}` | `users/1234567890` |
+
+الحل: لف الرابط كاملاً بعلامتي تنصيص `" "`، وتأكد ألا تبقى أي `{` أو `}` بالرابط أو بالتوكن.
+
+**خطأ: التوكن يظهر فارغًا `"Bot {}"` أو `"Bot "`**
+
+السبب: نفس مشكلة الأقواس أعلاه، أو نسيت لصق التوكن الحقيقي مكان `BOT_TOKEN`.
+
+الحل: تأكد أن بعد كلمة `Bot ` مباشرة يأتي التوكن الحقيقي بدون أقواس وبدون مسافة زائدة.
+
+**قائمة تحقق سريعة قبل تشغيل أي أمر:**
+- [ ] لا توجد أي `{` أو `}` متبقية من القالب الأصلي
+- [ ] الرابط محاط بعلامتي تنصيص `" "`
+- [ ] الأمر بسطر واحد متواصل (أو أسطر PowerShell معرّفة بمتغيرات، وليس بعلامة `\`)
+- [ ] تستخدم `Invoke-RestMethod` إذا كنت بـ PowerShell، أو `curl` إذا كنت بـ Termux/Linux/macOS
+
+### طريقة رابعة (دليل نصي بديل)
+
+فيه دليل بديل من Amia هنا: https://gist.github.com/aamiaa/7cdd590e3949cd654758bc90bcb4710b
 
 ---
 
@@ -242,40 +289,9 @@ addWidget("APPLICATION_ID")
 
 ---
 
-## استكشاف الأخطاء الشائعة (PowerShell / الطريقة اليدوية القديمة)
-
-> [!NOTE]
-> هذا القسم يخص من يزال يستخدم الطريقة اليدوية (PowerShell/curl) بدلاً من تطبيق Widget Identity Creator الموصى به حاليًا.
-
-### الخطأ: `The term '-H' is not recognized...` أو أخطاء مشابهة عن `-d`, `-X`
-
-**السبب:** نسخت أمر curl بصيغة Linux/Bash (مع علامة `\` بآخر كل سطر) ولصقته مباشرة بـ PowerShell. الـ `curl` بـ PowerShell هو اسم مستعار (alias) لأمر `Invoke-WebRequest` الذي لا يفهم صيغة `-H`, `-X`, `-d`.
-
-**الحل:** استخدم أمر `Invoke-RestMethod` المخصص لـ PowerShell، أو الأفضل استخدم تطبيق Widget Identity Creator بدلاً من ذلك.
-
 ---
 
-### الخطأ: `A positional parameter cannot be found that accepts argument '...'`
-
-**السبب الأول:** الرابط بعد `-Uri` غير محاط بعلامتي تنصيص `" "`. أي مسافة زائدة بالغلط تجعل PowerShell يقسّم الرابط لأجزاء منفصلة.
-
-**السبب الثاني (الأشيع):** نسيت حذف الأقواس المعقوفة `{ }` من حول القيم. الرموز مثل `{discordApplicationId}` هي مجرد أماكن توضيحية (placeholders) — يجب حذف `{` و `}` بالكامل ووضع القيمة الحقيقية مكانها فقط.
-
-| الحالة | خطأ | صحيح |
-|---|---|---|
-| مثال | `users/{1234567890}` | `users/1234567890` |
-
-**الحل:** لف الرابط كاملاً بعلامتي تنصيص مزدوجة `" "`، وتأكد ألا تبقى أي `{` أو `}` بالرابط أو بالتوكن.
-
----
-
-### الخطأ: التوكن يظهر فارغًا `"Bot {}"` أو `"Bot "`
-
-**السبب:** نفس مشكلة الأقواس أعلاه، أو نسيت لصق التوكن الحقيقي مكان `BOT_TOKEN`.
-
-**الحل:** تأكد أن بعد كلمة `Bot ` مباشرة يأتي التوكن الحقيقي بدون أقواس وبدون مسافة زائدة.
-
----
+## استكشاف أخطاء إضافية
 
 ### الويدجت لا يظهر رغم نجاح كل الخطوات
 
@@ -285,10 +301,7 @@ addWidget("APPLICATION_ID")
 - الكود المستخدم بالخطوة 7 قديم (نسخة `getFeaturedApplicationIds` بدلاً من `addWidget`)
 - أنت لست مالك التطبيق (Application Owner) — القيد الجديد يمنع الويدجتس من الظهور لغير المالك
 
-### قائمة تحقق سريعة قبل تشغيل أي أمر يدوي
+### قائمة تحقق سريعة إضافية
 
-- [ ] لا توجد أي `{` أو `}` متبقية من القالب الأصلي
-- [ ] الرابط محاط بعلامتي تنصيص `" "`
-- [ ] الأمر بسطر واحد متواصل (أو أسطر PowerShell معرّفة صح بمتغيرات، وليس بعلامة `\`)
 - [ ] تستخدم الكود المحدّث لإضافة الويدجت للبروفايل (`addWidget`)، وليس النسخة القديمة (`getFeaturedApplicationIds`)
 - [ ] الإكسبيريمنت `2026-03-application-widget-v2-renderer` مفعّل على Variant 1
