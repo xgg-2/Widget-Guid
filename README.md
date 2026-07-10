@@ -28,7 +28,7 @@ More languages may be added over time. If you'd like to contribute a translation
 
 ## Related
 
-- Companion tool for the identity activation step (no terminal required): [widget-tool.pages.dev](https://widget-tool.pages.dev)
+- Companion tool for the identity activation step (no terminal required): [widget-tool](https://widget-tool.pages.dev)
 
 ## Disclaimer
 
