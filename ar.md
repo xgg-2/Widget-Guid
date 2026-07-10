@@ -219,9 +219,6 @@ curl -X PATCH "https://discord.com/api/v9/applications/APPLICATION_ID/users/USER
 - [ ] الأمر بسطر واحد متواصل (أو أسطر PowerShell معرّفة بمتغيرات، وليس بعلامة `\`)
 - [ ] تستخدم `Invoke-RestMethod` إذا كنت بـ PowerShell، أو `curl` إذا كنت بـ Termux/Linux/macOS
 
-### طريقة رابعة (دليل نصي بديل)
-
-فيه دليل بديل من Amia هنا: https://gist.github.com/aamiaa/7cdd590e3949cd654758bc90bcb4710b
 
 ---
 
