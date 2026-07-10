@@ -14,7 +14,7 @@ If you spot something that's since changed or broken, opening an issue or PR is 
 
 | Language | File |
 |---|---|
-| العربية (Arabic) | [ar.md](./ar.md) |
+| العربية  | [ar.md](./ar.md) |
 | English | [en.md](./en.md) |
 
 More languages may be added over time. If you'd like to contribute a translation, open a pull request adding a new `<lang-code>.md` file and it'll be listed here.
