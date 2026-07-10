@@ -1,23 +1,204 @@
 # Discord Profile Widget — دليل الانشاء
 
-آخر تحديث: 5 يوليو 2026 (بناءً على النسخة v2 من دليل Chloe Cinders)
+آخر تحديث: 9 يوليو 2026
 
-هذا الدليل يشرح كيفية انشاء ويدجت مخصص في بروفايل Discord باستخدام Widgets v2.
-
-المتطلبات: حساب Discord، متصفح كروم او فايرفوكس، Windows/macOS (لتطبيق Widget Identity Creator).
-
-> [!NOTE]
-> ملاحظة: الويدجتس **ليست للبيانات اللحظية (Real-time)**. لازم تحدّثها ببوت يرسل تحديث كل فترة (دقائق)، مو كل ثانية.
-
----
+هذا الدليل يشرح كيفية إنشاء ويدجت مخصص في بروفايل Discord باستخدام Widgets v2.
 
 > [!WARNING]
-> **قيد المالك فقط:** ديسكورد قيّدت الويدجتس بحيث **فقط مالك التطبيق (Application Owner)** هو المسموح له يضيف الويدجت لبروفايله الشخصي. لا يمكنك حاليًا إضافة ويدجتس أشخاص آخرين. هذا الدليل لا يغطي صنع خدمة للآخرين — لو تبي تطّلع عليها، فيه بوت قديم مفتوح المصدر هنا: https://github.com/chloecinders/xivwidget وتوثيق الـ endpoints هنا: https://docs.discord.food/resources/widgets
+> **قيد المالك فقط:** ديسكورد قيّدت الويدجتس بحيث **فقط مالك التطبيق (Application Owner)** هو المسموح له يضيف الويدجت لبروفايله الشخصي. لا يمكنك حاليًا إضافة ويدجتس أشخاص آخرين كخدمة.
 
 > [!IMPORTANT]
-> **تحذير أمان:** ظهرت خدمات تدّعي تسهيل صنع الويدجتس وتطلب منك تعطيها **توكن البوت الخاص فيك**. هذا يخالف شروط استخدام مطوري ديسكورد (TOS)، وسبب إيقاف خدمة كانت تسمى "Bot Ghost" وتعليق تطبيقات كثيرة. **لا تضع توكن بوتك بأي موقع خارجي أبدًا** — هذا خطير جدًا.
+> **تحذير أمان:** لا تضع توكن بوتك بأي موقع خارجي لا تثق فيه أو لا تعرف كوده. هذا سبب إيقاف خدمات مثل "Bot Ghost" سابقًا من قبل ديسكورد. أي أداة تطلب توكنك يجب أن تكون مفتوحة المصدر وتقدر تراجع كودها بنفسك.
 
 ---
+
+# الجزء الأول: الطريقة السريعة (سكربت آلي شامل)
+
+هذي طريقة تسوي كل خطوات الإنشاء تلقائيًا بسكربت واحد تشغله بكونسول المتصفح — إنشاء التطبيق، تفعيل الصلاحيات، تصميم ويدجت افتراضي، نشره، إضافته للبروفايل، وتفعيل هويته. تحتاج بس تعدّل التصميم يدويًا بعدها.
+
+## المتطلبات
+
+- حساب ديسكورد بإيميل موثّق (Verified Email) — **إجباري**، وإلا فشلت أول خطوة
+- متصفح كمبيوتر (كروم أو فايرفوكس)
+
+## خطوات التشغيل
+
+1. افتح discord.com/developers/applications بمتصفحك
+2. اضغط Ctrl+Shift+I (أو Cmd+Option+I بـ macOS) لفتح أدوات المطور، واذهب لتبويب **Console**
+3. انسخ السكربت التالي كامل والصقه بالكونسول، ثم اضغط Enter
+
+```js
+let wpRequire = webpackChunkdiscord_developers.push([[Symbol()], {}, r => r]);
+webpackChunkdiscord_developers.pop();
+
+let ApexStore = Object.values(wpRequire.c).find(x => x?.exports?.A?.createOverride).exports.A;
+let UserStore = Object.values(wpRequire.c).find(x => x?.exports?.A?.__proto__?.getCurrentUser).exports.A;
+let FluxDispatcher = Object.values(wpRequire.c).find(x => x?.exports?.A?.__proto__?.flushWaitQueue).exports.A;
+let api = Object.values(wpRequire.c).find(x => x?.exports?.Bo?.get).exports.Bo;
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+
+const IDENTITY_TOOL_URL = "https://widget-tool.pages.dev"
+
+async function resetBotTokenWithRetry(appId, maxAttempts = 5) {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        let res;
+        try {
+            res = await api.post({url: `/applications/${appId}/bot/reset`})
+        } catch (e) {
+            res = null;
+        }
+
+        if (res?.body?.token) {
+            return res.body.token
+        }
+
+        console.warn(`[EUIZ Widget] Bot token reset attempt ${attempt}/${maxAttempts} failed.`, res)
+        if (attempt === maxAttempts) {
+            throw new Error("Bot token reset failed after multiple attempts. Reset it manually from the Bot page instead.")
+        }
+        const proceed = confirm(
+            "Discord needs extra verification (2FA) to reset the bot token.\n\n" +
+            "If a verification prompt appeared on screen, complete it now.\n\n" +
+            "Press OK once done to retry, or Cancel to stop."
+        )
+        if (!proceed) {
+            throw new Error("Bot token reset cancelled by user.")
+        }
+        await sleep(500)
+    }
+}
+
+const userId = UserStore.getCurrentUser().id
+console.log("[EUIZ Widget] Creating a new app... Please solve the captcha if prompted")
+const appRes = await api.post({url: "/applications", body: {name: "EUIZ Widget", team_id: null}})
+FluxDispatcher.dispatch({type: "APPLICATION_CREATE_SUCCESS", application: appRes.body})
+const appId = appRes.body.id
+
+console.log("[EUIZ Widget] Enabling social sdk...")
+await api.post({url: `/applications/${appId}/social-sdk/enable`, body: {"name":"a","business_email":"foo@bar.com","game_or_studio_name":"a","game_or_studio_url":"","email_updates_consent":false,"country_or_region":"United States","title_role":"Founder","target_platforms":[],"form_type":"Dev Solutions","sfdc_leadsource":"Dev Portal","utm_campaign":"SDK Enable Form"}})
+
+console.log("[EUIZ Widget] Creating a new widget...")
+const configRes = await api.post({url: `/applications/${appId}/widget-configs`, body: {display_name: "EUIZ Widget"}})
+const configId = configRes.body.config_id
+await api.patch({url: `/applications/${appId}/widget-configs/${configId}`, body: {"surfaces":{"widget_top":{"layout":"widget_top_hero","components":{"hero_image":{"fields":{"image":{"presentation_type":"image","value_type":"data","value":"change this to an image"}}},"title":{"fields":{"text":{"presentation_type":"text","value_type":"custom_string","value":"some title here"}}}}},"widget_bottom":{"layout":"widget_bottom_stats","components":{"stat_1":{"fields":{"value":{"presentation_type":"text","value_type":"custom_string","value":"text 1 here"},"label":{"presentation_type":"text","value_type":"custom_string","value":"label 1 here"}}},"stat_2":{"fields":{"value":{"presentation_type":"text","value_type":"custom_string","value":"text 2 here"},"label":{"presentation_type":"text","value_type":"custom_string","value":"label 2 here"}}},"stat_3":{"fields":{"value":{"presentation_type":"text","value_type":"custom_string","value":"text 3 here"},"label":{"presentation_type":"text","value_type":"custom_string","value":"label 3 here"}}},"stat_4":{"fields":{"value":{"presentation_type":"text","value_type":"custom_string","value":"text 4 here"},"label":{"presentation_type":"text","value_type":"custom_string","value":"label 4 here"}}},"stat_5":{"fields":{"value":{"presentation_type":"text","value_type":"custom_string","value":"text 5 here"},"label":{"presentation_type":"text","value_type":"custom_string","value":"label 5 here"}}},"stat_6":{"fields":{"value":{"presentation_type":"text","value_type":"custom_string","value":"text 6 here"},"label":{"presentation_type":"text","value_type":"custom_string","value":"label 6 here"}}}}},"add_widget_preview":{"layout":"add_widget_preview_hero","components":{"hero_image":{"fields":{"image":{"presentation_type":"image","value_type":"data","value":"change this to an image"}}}}}}}})
+await api.post({url: `/applications/${appId}/widget-configs/${configId}/publish`})
+
+console.log("[EUIZ Widget] Adding the widget to profile...")
+await api.patch({url: `/applications/${appId}`, body: {redirect_uris: ["https://discord.com"]}})
+await api.post({url: `/oauth2/authorize?client_id=${appId}&response_type=token&scope=sdk.social_layer_presence`, body: {authorize: true}})
+const profileRes = await api.get({url: `/users/${userId}/profile`})
+const existingWidgets = profileRes.body.widgets
+existingWidgets.unshift({"data":{"type":"application","application_id":appId}})
+await api.put({url: `/users/@me/widgets`, body: {"widgets": existingWidgets}})
+
+console.log("[EUIZ Widget] Getting the bot's token... A verification prompt may appear, complete it if it does.")
+const botToken = await resetBotTokenWithRetry(appId)
+console.log("[EUIZ Widget] Bot token obtained successfully.")
+
+const identityUrl = `${IDENTITY_TOOL_URL}/?appId=${encodeURIComponent(appId)}&userId=${encodeURIComponent(userId)}#token=${encodeURIComponent(botToken)}`
+window.open(identityUrl, "_blank")
+console.log("[EUIZ Widget] A new tab has opened with your details pre-filled. Complete the verification challenge there and press the send button to finish activating your widget.")
+
+ApexStore.createOverride("2026-03-widget-config-editor", 1)
+document.querySelector(`a[href="/developers/applications/${appId}"]`).click()
+while(!document.querySelector(`a[href="/developers/applications/${appId}/widget"]`)) {
+    await sleep(100)
+}
+document.querySelector(`a[href="/developers/applications/${appId}/widget"]`).click()
+console.log("[EUIZ Widget] Done! You can now edit your widget's design on this page.")
+```
+
+4. راقب الكونسول أثناء التنفيذ:
+   - لو طلعت نافذة **captcha**، حلّها
+   - لو طلعت نافذة **confirm()** بخصوص التحقق (2FA)، تفاعل مع أي نافذة تحقق ظهرت بالصفحة، ثم اضغط **OK** بنافذة الـ confirm للمتابعة
+5. راح يفتح **تبويب جديد** بموقع أداة التفعيل، معبّى تلقائيًا بالبيانات. حل التحقق البشري (Captcha/Turnstile) بذاك التبويب واضغط **Send identity request**
+6. السكربت بنفس الوقت يفتحك على صفحة تصميم الويدجت — عدّل الحقول (الصورة، العنوان، الإحصائيات الستة) حسب رغبتك، ثم **Save Changes** و **Publish**
+
+## ليش السكربت يفتح تبويب ثاني بدل ما يرسل الطلب مباشرة؟
+
+جُرّب إرسال طلب التفعيل مباشرة من نفس كونسول discord.com عبر `fetch()`، لكنه فشل بثبات بخطأ `403: internal network error`. السبب الأرجح: الطلب يحمل هوية البوت (Authorization header) **ونفس كوكيز جلستك الشخصية** بذات الوقت (لأنه من نفس الـ Origin)، وهذا التعارض يخلي ديسكورد يرفضه. إرساله من موقع منفصل (عبر Cloudflare Worker) يتجاوز هذا التعارض تمامًا لأنه طلب من سيرفر خارجي بلا كوكيز إطلاقًا.
+
+## استكشاف أخطاء السكربت الآلي
+
+### فشل بأول خطوة: `POST /applications → 403 code: 40002`
+
+**السبب:** حسابك غير موثّق البريد الإلكتروني. ديسكورد تشترط إيميل موثّق لإنشاء تطبيقات عبر API.
+
+**الحل:** روح لإيميلك وفعّل رابط التحقق من ديسكورد، أو من User Settings → My Account → Verify Email، ثم أعد المحاولة.
+
+### فشل جلب توكن البوت (`bot/reset`) رغم وجود دالة إعادة المحاولة
+
+**السبب:** أحيانًا ديسكورد تطلب تحقق (2FA) بنافذة منفصلة عن الطلب البرمجي نفسه، والدالة تكتشف الفشل وتعرض نافذة `confirm()` لإعطائك فرصة تتفاعل معها.
+
+**الحل:** لما تطلع نافذة `confirm()`، دوّر إذا فيه نافذة تحقق ثانية ظهرت بالصفحة (قد تكون خلف النافذة الحالية)، أكملها، ثم اضغط OK بالـ confirm لإعادة المحاولة.
+
+### التطبيق ظهر بالبروفايل لكن برسالة "still syncing"
+
+**السبب:** خطوة تفعيل الهوية (بالتبويب الجديد) ما اكتملت أو فشلت.
+
+**الحل:** تأكد رجعت لذاك التبويب وضغطت "Send identity request" فعليًا بعد حل التحقق البشري.
+
+## سكربتات مساعدة: عرض وحذف الويدجتس
+
+لو شغّلت السكربت الشامل أكثر من مرة للتجربة، أو حذفت تطبيقًا من الـ Developer Portal بعد إضافته كويدجت، بتلقى مراجع معطّلة بقائمة widgets حسابك تسبب أخطاء 401 غامضة. هذي أداتين لإدارتها:
+
+### سكربت عرض القائمة
+
+```js
+let wp = (window.webpackChunkdiscord_app ?? window.webpackChunkdiscord_developers)
+let wpRequire = wp.push([[Symbol()], {}, r => r]);
+wp.pop();
+let api = Object.values(wpRequire.c).find(x => x?.exports?.Bo?.get).exports.Bo;
+let UserStore = Object.values(wpRequire.c).find(x => x?.exports?.A?.__proto__?.getCurrentUser).exports.A;
+
+const userId = UserStore.getCurrentUser().id
+const profileRes = await api.get({url: `/users/${userId}/profile`})
+const widgets = profileRes.body.widgets
+
+console.log(`[EUIZ Widget] You have ${widgets.length} widget(s):`)
+widgets.forEach((w, i) => {
+    console.log(`  ${i}: application_id = ${w.data?.application_id}  |  added = ${w.updated_at}`)
+})
+```
+
+شغّله لوحده بدون تعديل — يطبع لك كل الـ Application IDs المرتبطة ببروفايلك مع تاريخ إضافتها.
+
+### سكربت حذف ويدجت محدد
+
+```js
+let wp = (window.webpackChunkdiscord_app ?? window.webpackChunkdiscord_developers)
+let wpRequire = wp.push([[Symbol()], {}, r => r]);
+wp.pop();
+let api = Object.values(wpRequire.c).find(x => x?.exports?.Bo?.get).exports.Bo;
+let UserStore = Object.values(wpRequire.c).find(x => x?.exports?.A?.__proto__?.getCurrentUser).exports.A;
+
+// ضع هنا الـ Application ID اللي تبي تحذفه
+const REMOVE_APP_ID = "ضع_الايدي_هنا"
+
+const userId = UserStore.getCurrentUser().id
+const profileRes = await api.get({url: `/users/${userId}/profile`})
+const currentWidgets = profileRes.body.widgets
+
+const filteredWidgets = currentWidgets.filter(w => w.data?.application_id !== REMOVE_APP_ID)
+
+if (filteredWidgets.length === currentWidgets.length) {
+    console.warn("[EUIZ Widget] That Application ID was not found. Nothing was removed.")
+} else {
+    await api.put({url: "/users/@me/widgets", body: {widgets: filteredWidgets}})
+    console.log(`[EUIZ Widget] Removed widget ${REMOVE_APP_ID}. ${filteredWidgets.length} widget(s) remaining.`)
+}
+```
+
+عدّل `REMOVE_APP_ID` بالـ ID اللي نسخته من سكربت العرض أعلاه، وشغّله — يحذف بس ذاك العنصر ويحافظ على كل الويدجتس الثانية سليمة بدون أي تغيير.
+
+> [!WARNING]
+> لا تستخدم `widgets: []` (مصفوفة فاضية بالكامل) إلا لو تبي تمسح **كل** الويدجتس بحسابك، بما فيها أي ويدجت أساسي شغال. استخدم دايمًا سكربت الحذف المحدد أعلاه بدلها.
+
+---
+
+# الجزء الثاني: الطريقة اليدوية التفصيلية (خطوة بخطوة)
+
+لو تفضّل تفهم كل خطوة بنفسك، أو تبي تحكم كامل بتصميم الويدجت من البداية، اتبع هالقسم بدل السكربت الآلي.
 
 ## الخطوة 1 — انشاء التطبيق
 
@@ -125,7 +306,7 @@ findByProps("getAll").getAll().find(e=>e.getName() === "ApexExperimentStore").cr
 > [!WARNING]
 > تخطي هذه الخطوة يسبب عدم ظهور الويدجت لأي مستخدم آخر!
 
-هذه الخطوة كانت تُنفّذ سابقًا عبر Terminal (PowerShell/curl)، لكنها كانت عرضة للأخطاء. فيه الآن 3 طرق ممكنة، رتّبناها من الأسهل للأصعب:
+هذه الخطوة كانت تُنفّذ سابقًا عبر Terminal (PowerShell/curl)، لكنها كانت عرضة للأخطاء. فيه الآن طريقتين ممكنتين:
 
 ### الطريقة الأسهل: أداة الويب (Widget Identity Tool)
 
@@ -136,12 +317,13 @@ https://widget-tool.pages.dev
 **خطوات الاستخدام:**
 1. افتح الرابط
 2. حط الـ Application ID، الـ User ID، وتوكن البوت (بعد ما تعمل له Reset Token جديد)
-3. اضغط "Send identity request"
+3. حل التحقق البشري (Turnstile)
+4. اضغط "Send identity request"
 
 الموقع مفتوح المصدر (رابط الكود موجود بأسفل الصفحة نفسها) — يقدر أي حد يراجع الكود قبل ما يثق فيه، أو ينشر نسخته الخاصة لو حاب. الأداة لا تخزّن ولا تسجل أي بيانات؛ ترسل طلبًا واحدًا مباشرًا لـ Discord وتنتهي.
 
 > [!NOTE]
-> هذا خيار مجتمعي إضافي، مو أداة رسمية من ديسكورد أو من كاتب الدليل الأصلي. راجع كود المصدر بنفسك قبل إدخال توكن بوتك بأي أداة خارجية، مهما كانت.
+> هذا خيار مجتمعي إضافي، مو أداة رسمية من ديسكورد. راجع كود المصدر بنفسك قبل إدخال توكن بوتك بأي أداة خارجية، مهما كانت.
 
 ### الطريقة اليدوية: عبر Terminal (PowerShell / Termux / Linux / macOS)
 
@@ -185,7 +367,7 @@ curl -X PATCH "https://discord.com/api/v9/applications/APPLICATION_ID/users/USER
 - **BOT_TOKEN**: التوكن من صفحة Bot في بوابة المطورين بعد الضغط على Reset Token
 - **FIELD_NAME** و **FIELD_VALUE**: اسم وقيمة كل حقل مخصص صممته بالودجت
 
-لو نجح الأمر بدون أخطاء، انتقل مباشرة للخطوة 8. لو تبني خدمة لأشخاص آخرين (مو لنفسك بس)، تخطّ هذي الخطوة بالكامل.
+لو نجح الأمر بدون أخطاء، انتقل مباشرة للخطوة 7. لو تبني خدمة لأشخاص آخرين (مو لنفسك بس)، تخطّ هذي الخطوة بالكامل.
 
 #### حل المشكلات الشائعة (PowerShell)
 
@@ -219,33 +401,22 @@ curl -X PATCH "https://discord.com/api/v9/applications/APPLICATION_ID/users/USER
 - [ ] الأمر بسطر واحد متواصل (أو أسطر PowerShell معرّفة بمتغيرات، وليس بعلامة `\`)
 - [ ] تستخدم `Invoke-RestMethod` إذا كنت بـ PowerShell، أو `curl` إذا كنت بـ Termux/Linux/macOS
 
-
 ---
 
 ## الخطوة 7 — اضافة الويدجت للبروفايل
 
 > [!IMPORTANT]
-> **تحديث 8 يوليو 2026:** يبدو أن ديسكورد فتحت زر "Add Widget" ليعرض تلقائيًا أي تطبيق أكملت له خطوات النشر (5) وتفعيل الهوية (6)، بدون الحاجة للكود اليدوي بالكونسول الذي كان مطلوبًا سابقًا. هذا غير موثّق رسميًا من ديسكورد حتى الآن، لكنه تأكد ميدانيًا بتجربة فعلية بتاريخ اليوم. **جرّب الطريقة السهلة أولاً (أدناه)** قبل اللجوء للطريقة اليدوية.
+> **تحديث 8 يوليو 2026:** يبدو أن ديسكورد فتحت زر "Add Widget" ليعرض تلقائيًا أي تطبيق أكملت له خطوات النشر والهوية، بدون الحاجة للكود اليدوي بالكونسول الذي كان مطلوبًا سابقًا. هذا غير موثّق رسميًا من ديسكورد حتى الآن، لكنه تأكد ميدانيًا بتجربة فعلية. **جرّب الطريقة السهلة أولاً (أدناه)** قبل اللجوء للطريقة اليدوية.
 
-### جرّب هذا أولاً (الطريقة الجديدة، بدون كود)
+### جرّب هذا أولاً (بدون كود)
 
 1. افتح بروفايلك بديسكورد (متصفح أو تطبيق سطح المكتب)
 2. اضغط **Edit Profile** ثم دور على قسم **Widgets** أو **Add Widget**
-3. لو تطبيقك ظاهر بالقائمة مباشرة، اضغطه واضغط Save — **خلاص، انتهيت، لا داعي لأي كود!**
+3. لو تطبيقك ظاهر بالقائمة مباشرة، اضغطه واضغط Save — انتهيت، لا داعي لأي كود
 
-لو ظهر تطبيقك مباشرة، تجاهل الطريقة اليدوية بالأسفل بالكامل وانتقل للملاحظات الأخيرة بالدليل.
+### الطريقة اليدوية القديمة (احتياطية)
 
-### الطريقة اليدوية القديمة (احتياطية، لو لم يظهر تطبيقك تلقائيًا)
-
-> [!WARNING]
-> عدم اتباع أي خطوة سابقة بدقة، أو حدوث أخطاء فيها، سيسبب إما عدم ظهور الويدجت هنا أو عدم ظهوره لبقية المستخدمين.
-
-افتح ديسكورد بالمتصفح: https://discord.com/app. افتح أدوات المطور مرة أخرى (Ctrl+Shift+I أو Cmd+Option+I) واذهب لتبويب Console.
-
-> [!NOTE]
-> ستظهر لك رسائل تحذيرية من ديسكورد بخصوص لصق أكواد بالكونسول (خطر احتيال حقيقي بشكل عام) — لكننا هنا فقط لإضافة الويدجت لبروفايلنا، وليس لسرقة أي معلومات دخول.
-
-انسخ هذا الكود والصقه بالكونسول، **لكن لا تضغط Enter بعد**:
+افتح ديسكورد بالمتصفح: https://discord.com/app. افتح أدوات المطور (Ctrl+Shift+I) واذهب لتبويب Console. انسخ هذا الكود والصقه، **لكن لا تضغط Enter بعد**:
 
 ```js
 let _mods=webpackChunkdiscord_app.push([[Symbol()],{},e=>e.c]);webpackChunkdiscord_app.pop();
@@ -263,28 +434,21 @@ async function addWidget(appId) {
 addWidget("APPLICATION_ID")
 ```
 
-استبدل `"APPLICATION_ID"` بمعرّف تطبيقك الحقيقي (يوجد بصفحة General Information بالـ Developer Portal). بعدها اضغط Enter.
+استبدل `"APPLICATION_ID"` بمعرّف تطبيقك الحقيقي، ثم اضغط Enter.
 
-لو لم تظهر أخطاء حمراء كبيرة تخص `PUT https://discord.com/api/v9/users/@me/widgets`، فقد نجحت العملية! أعد تحميل تطبيق ديسكورد (Ctrl+R) وتحقق من بروفايلك.
-
-تأكد أيضًا إن الإكسبيريمنت `2026-03-application-widget-v2-renderer` مضبوط على Variant 1 بحسابك، وإلا الويدجت قد لا يظهر حتى بعد إضافته بنجاح.
+تأكد أيضًا إن الإكسبيريمنت `2026-03-application-widget-v2-renderer` مضبوط على Variant 1 بحسابك.
 
 > [!NOTE]
-> حتى مع نجاح كل الخطوات، بسبب قيد "مالك التطبيق فقط" (بالأعلى)، الويدجت سيظهر **لك فقط** وليس بالضرورة لأي زائر آخر يفتح بروفايلك.
+> حتى مع نجاح كل الخطوات، بسبب قيد "مالك التطبيق فقط"، الويدجت سيظهر **لك فقط** وليس بالضرورة لأي زائر آخر يفتح بروفايلك.
 
 ---
 
 ## ملاحظات مهمة
 
 - الخطوات 4 و 7 (وتفعيل الإكسبيريمنت) قد تحتاج إعادة تنفيذ عند تحديث الصفحة أو زيارتها من جديد
-- لتحديث بيانات الويدجت مستقبلاً، أرسل بيانات جديدة عبر البوت الخاص بك بنفس الطريقة المستخدمة بخطوة تفعيل الهوية (عبر API مباشرة، وليس بالضرورة نفس التطبيق المكتبي في كل مرة إذا كان لديك بوت مستقل)
 - لا تشارك Bot Token مع أي أحد أو أي موقع خارجي أبدًا. إذا انكشف، اضغط Reset Token فورًا
-- لا تشارك أي Access/Authorization Token مع أحد
-- الويدجت حاليًا يظهر فقط لمالك التطبيق نفسه، وليس بالضرورة للزوار الآخرين على البروفايل
 - الويدجتس ليست مخصصة للبيانات اللحظية (Real-time) — استخدم فترات تحديث معقولة (دقائق، وليس ثوانٍ)
-- للمساعدة أو الإبلاغ عن مشاكل، انضم لسيرفر Discord Previews واقرأ قناة #widget-faq أولاً قبل السؤال بـ #widget-chat، وتصفح #widget-showcase للإلهام
-
----
+- للمساعدة، انضم لسيرفر Discord Previews واقرأ قناة #widget-faq أولاً
 
 ## استكشاف أخطاء إضافية
 
@@ -294,9 +458,4 @@ addWidget("APPLICATION_ID")
 - الإكسبيريمنت `2026-03-application-widget-v2-renderer` غير مضبوط على Variant 1
 - لم يُنشر (Publish) البوت لأي تحديث بيانات فعلي بعد خطوة تفعيل الهوية
 - الكود المستخدم بالخطوة 7 قديم (نسخة `getFeaturedApplicationIds` بدلاً من `addWidget`)
-- أنت لست مالك التطبيق (Application Owner) — القيد الجديد يمنع الويدجتس من الظهور لغير المالك
-
-### قائمة تحقق سريعة إضافية
-
-- [ ] تستخدم الكود المحدّث لإضافة الويدجت للبروفايل (`addWidget`)، وليس النسخة القديمة (`getFeaturedApplicationIds`)
-- [ ] الإكسبيريمنت `2026-03-application-widget-v2-renderer` مفعّل على Variant 1
+- أنت لست مالك التطبيق (Application Owner)
