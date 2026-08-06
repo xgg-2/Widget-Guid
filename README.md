@@ -4,7 +4,7 @@ A guide for creating custom Discord profile widgets using Widgets v2 — include
 
 Compiled and maintained by **youcef** ([xgg.2](https://discord.com/users/1159928250148077728)).
 
-> ### **Important — Feature Disabled**
+> [!IMPORTANT]
 >
 > **Discord has disabled creating widgets on newly made applications completely.** If your application was created after this change, none of the methods in this guide (script or manual) will work — Discord blocks widget creation at the source now, regardless of how correctly the steps are followed.
 >
