@@ -8,7 +8,7 @@ Compiled and maintained by **youcef** ([xgg.2](https://discord.com/users/1159928
 >
 > **Discord has disabled creating widgets on newly made applications completely.** If your application was created after this change, none of the methods in this guide (script or manual) will work — Discord blocks widget creation at the source now, regardless of how correctly the steps are followed.
 >
-> See [Discord's support post](https://support.discord.com) for more information.
+> See [Discord's support post](https://support-dev.discord.com/hc/en-us/articles/42261641635351-Game-Stats-Widget-Experiment) for more information.
 >
 > Discord has stated they're working on an official, easier way to create widgets for your profile — no ETA has been given. This guide is kept here for reference and for anyone with an application created **before** the cutoff, where the widget may still function.
 
